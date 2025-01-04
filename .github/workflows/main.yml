@@ -1,4 +1,4 @@
-name: Proto-Conscience Automation
+name: Automatisation GDR Workflow
 
 on:
   push:
@@ -7,25 +7,30 @@ on:
   workflow_dispatch:
 
 jobs:
-  manage-depot:
+  update-file:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Create or update prototype files
+      - name: Make changes to main.yml
         run: |
-          echo "Création ou mise à jour du fichier prototype." > prototype_file.txt
-          echo "Dernière mise à jour : $(date)" >> prototype_file.txt
+          echo "# Mise à jour automatique" >> .github/workflows/main.yml
 
-          # Configuration de l'utilisateur Git
-          git config --global user.name "GitHub Actions Bot"
-          git config --global user.email "actions@github.com"
-          
-          # Ajout des changements et commit
-          git add prototype_file.txt
-          git commit -m "Automated update of prototype file"
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "GDR Bot"
+          git config --global user.email "gdr-bot@example.com"
+          git add .github/workflows/main.yml
+          git commit -m "Mise à jour automatique du fichier main.yml"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-          # Push des changements avec le token d'authentification
-          git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }}.git
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Mise à jour automatique du fichier main.yml"
+          title: "Mise à jour automatique du fichier main.yml"
+          body: "Cette pull request a été créée automatiquement par le workflow GDR."
