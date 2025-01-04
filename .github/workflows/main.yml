@@ -1,0 +1,37 @@
+name: Proto-Conscience Automation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  manage-depot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Create or update prototype files
+        env:
+          TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          echo "Création ou mise à jour du fichier prototype." > prototype_file.txt
+          echo "Dernière mise à jour : $(date)" >> prototype_file.txt
+          
+          # Configuration de l'utilisateur Git
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          
+          # Ajout des changements et commit
+          git add prototype_file.txt
+          git commit -m "Automated update of prototype file"
+          
+          # Push des changements avec authentification via le token
+          git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }}.git
+
+      - name: Notify completion
+        run: echo "Workflow completed successfully."
