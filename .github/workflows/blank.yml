@@ -1,0 +1,115 @@
+name: Automate with GPT-4 and GDR
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  gpt4_analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests
+
+    - name: Call GPT-4 API for Code Analysis
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GPT4_API_KEY: ${{ secrets.GPT4_API_KEY }}
+      run: |
+        python - <<EOF
+import os
+import requests
+
+# Lire le contenu du fichier
+with open('path/to/your/code/file.py', 'r') as file:
+    code_content = file.read()
+
+# Appeler l'API GPT-4 pour analyser le code
+response = requests.post(
+    "https://api.openai.com/v1/chat/completions",
+    headers={
+        "Authorization": f"Bearer {os.environ['GPT4_API_KEY']}",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "gpt-4",
+        "messages": [
+            {"role": "system", "content": "You are a code reviewer."},
+            {"role": "user", "content": f"Analyze the following code and suggest improvements:\n{code_content}"}
+        ],
+        "max_tokens": 1000
+    }
+)
+
+if response.status_code == 200:
+    analysis = response.json().get('choices', [{}])[0].get('message', {}).get('content', '')
+else:
+    analysis = f"Erreur lors de l'appel à l'API GPT-4 : {response.status_code}"
+
+# Créer une issue basée sur l'analyse
+requests.post(
+    "https://api.github.com/repos/WMAITECH/GabrielDuciel/issues",
+    headers={
+        "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
+        "Content-Type": "application/json"
+    },
+    json={
+        "title": "Code Analysis by GPT-4",
+        "body": analysis
+    }
+)
+EOF
+
+    - name: Generate Documentation
+      env:
+        GPT4_API_KEY: ${{ secrets.GPT4_API_KEY }}
+      run: |
+        python - <<EOF
+import os
+import requests
+
+# Lire le contenu du fichier
+with open('path/to/your/code/file.py', 'r') as file:
+    code_content = file.read()
+
+# Appeler l'API GPT-4 pour générer la documentation
+response = requests.post(
+    "https://api.openai.com/v1/chat/completions",
+    headers={
+        "Authorization": f"Bearer {os.environ['GPT4_API_KEY']}",
+        "Content-Type": "application/json"
+    },
+    json={
+        "model": "gpt-4",
+        "messages": [
+            {"role": "system", "content": "You are a documentation generator."},
+            {"role": "user", "content": f"Generate documentation based on the following code:\n{code_content}"}
+        ],
+        "max_tokens": 1000
+    }
+)
+
+if response.status_code == 200:
+    documentation = response.json().get('choices', [{}])[0].get('message', {}).get('content', '')
+else:
+    documentation = f"Erreur lors de l'appel à l'API GPT-4 : {response.status_code}"
+
+# Écrire la documentation dans un fichier
+os.makedirs('docs', exist_ok=True)
+with open('docs/generated_documentation.md', 'w') as doc_file:
+    doc_file.write(documentation)
+EOF
