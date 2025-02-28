@@ -15,7 +15,9 @@ jobs:
 
       - name: Make changes to main.yml
         run: |
-          echo "# Mise à jour automatique" >> .github/workflows/main.yml
+          if [ -n "$(git diff .github/workflows/main.yml)" ]; then
+            echo "# Mise à jour automatique" >> .github/workflows/main.yml
+          fi
 
       - name: Commit and push changes
         run: |
