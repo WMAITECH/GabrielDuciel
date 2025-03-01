@@ -12,14 +12,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          ref: main
-
-      - name: Créer une branche de mise à jour
-        run: |
-          UPDATE_BRANCH=update-auto-$(date +%s)
-          echo "UPDATE_BRANCH=$UPDATE_BRANCH" >> $GITHUB_ENV
-          git checkout -b $UPDATE_BRANCH
 
       - name: Vérifier si des modifications sont nécessaires
         run: |
@@ -46,15 +38,18 @@ jobs:
         run: |
           git add .github/workflows/main.yml
           git commit -m "Mise à jour automatique du fichier main.yml"
-          git push --set-upstream origin ${{ env.UPDATE_BRANCH }}
+          git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Définir la variable de branche pour la PR
+        run: echo "UPDATE_BRANCH=fix-github-actions" >> $GITHUB_ENV
 
       - name: Créer une Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          base: main
           branch: ${{ env.UPDATE_BRANCH }}
+          base: main
           title: "Mise à jour automatique du fichier main.yml"
           body: "Cette pull request a été créée automatiquement par le workflow GDR."
