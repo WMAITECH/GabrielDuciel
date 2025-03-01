@@ -15,7 +15,7 @@ jobs:
 
       - name: Vérifier si des modifications sont nécessaires
         run: |
-          if grep -q "# Mise à jour automatique" .github/workflows/main.yml; then
+          if git diff --quiet .github/workflows/main.yml; then
             echo "Aucune modification nécessaire, arrêt du workflow."
             exit 0
           else
