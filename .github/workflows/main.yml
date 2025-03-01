@@ -36,6 +36,10 @@ jobs:
 
       - name: Commit et push des modifications
         run: |
+          if git diff --quiet; then
+            echo "Aucune modification détectée, arrêt du workflow."
+            exit 0
+          fi
           git add .github/workflows/main.yml
           git commit -m "Mise à jour automatique du fichier main.yml"
           git push
