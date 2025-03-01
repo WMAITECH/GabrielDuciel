@@ -13,23 +13,36 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Make changes to main.yml
+      - name: Vérifier si des modifications sont nécessaires
         run: |
-          if [ -n "$(git diff .github/workflows/main.yml)" ]; then
+          if grep -q "# Mise à jour automatique" .github/workflows/main.yml; then
+            echo "Aucune modification nécessaire, arrêt du workflow."
+            exit 0
+          else
             echo "# Mise à jour automatique" >> .github/workflows/main.yml
           fi
 
-      - name: Commit and push changes
+      - name: Vérifier les modifications avant commit
+        run: |
+          if git diff --quiet; then
+            echo "Aucune modification détectée, arrêt du workflow."
+            exit 0
+          fi
+
+      - name: Configurer Git
         run: |
           git config --global user.name "GDR Bot"
           git config --global user.email "gdr-bot@example.com"
+
+      - name: Commit et push des modifications
+        run: |
           git add .github/workflows/main.yml
           git commit -m "Mise à jour automatique du fichier main.yml"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create pull request
+      - name: Créer une Pull Request si nécessaire
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
